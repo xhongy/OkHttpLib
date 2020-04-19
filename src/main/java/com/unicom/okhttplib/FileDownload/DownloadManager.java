@@ -29,6 +29,7 @@ public class DownloadManager {
     private static final AtomicReference<DownloadManager> INSTANCE = new AtomicReference<>();
     private HashMap<String, Call> downCalls;//用来存放各个下载的请求
     private OkHttpClient mClient;//OKHttpClient;
+    public static File mFileCacheDir;
 
     //获得一个单例类
     public static DownloadManager getInstance(Context mContext) {
@@ -53,12 +54,14 @@ public class DownloadManager {
     /**
      * 开始下载
      *
-     * @param url              下载请求的网址
+     * @param downloadUurl 下载请求的网址
+     * @param cacheDir 文件保存路径
      * @param downLoadObserver 用来回调的接口
      */
-    public void download(String url, DownLoadObserver downLoadObserver) {
-        Logger.d("url="+url);
-        Observable.just(url)
+    public void download(String downloadUurl, File cacheDir, DownLoadObserver downLoadObserver) {
+        this.mFileCacheDir = cacheDir;
+        Logger.d("downloadUurl="+downloadUurl);
+        Observable.just(downloadUurl)
                 .filter(s -> !downCalls.containsKey(s))//call的map已经有了,就证明正在下载,则这次不下载
                 .flatMap(s -> Observable.just(createDownInfo(s)))
                 .map(this::getRealFileName)//检测本地文件夹,生成新的文件名
@@ -77,9 +80,9 @@ public class DownloadManager {
     }
 
     /**
-     * 创建DownInfo
+     * 创建DownInfo，保存要下载的文件info
      *
-     * @param url 请求网址
+     * @param url 要下载的文件地址
      * @return DownInfo
      */
     private DownloadInfo createDownInfo(String url) {
@@ -90,6 +93,7 @@ public class DownloadManager {
         downloadInfo.seteTag(data.geteTag());
         String fileName = url.substring(url.lastIndexOf("/"));
         downloadInfo.setFileName(fileName);
+        Log.d("coco","filename="+fileName);
         downloadInfo.setSharedPreferencesFileName(FileUtil.getSharedPreferencesFileName(fileName));
         return downloadInfo;
     }
@@ -98,14 +102,21 @@ public class DownloadManager {
         FileUtil.delSharePreferenceFile(mContext,fileName);
     }
 
+    /**
+     * 获取要下载的文件的信息，是否已下载，下载了多少
+     * @param downloadInfo
+     * @return
+     * @throws ParseException
+     */
     private DownloadInfo getRealFileName(DownloadInfo downloadInfo) throws ParseException {
         String fileName = downloadInfo.getFileName();
         long downloadLength = 0;
         ResponseData data = FileUtil.getFileInfo(mContext,downloadInfo);
         Log.d("coco","开始"+data.getModify()+"   tag="+data.geteTag());
         Log.d("coco","结束"+downloadInfo.getLastModify()+"   tag="+downloadInfo.geteTag());
-        File file = new File(mContext.getFilesDir(), fileName);
 
+//        File file = new File(mContext.getFilesDir(), fileName);
+        File file = new File(this.mFileCacheDir, fileName);
         // 文件存在，
         if (file.exists()) {
             // 并且服务器文件没有发生变化
@@ -157,7 +168,9 @@ public class DownloadManager {
             downCalls.put(url, call);//把这个添加到call里,方便取消
             Response response = call.execute();
 
-            File file = new File(mContext.getFilesDir(), downloadInfo.getFileName());
+            Log.d("coco","****mFileCacheDir="+mFileCacheDir);
+            File file = new File(mFileCacheDir, downloadInfo.getFileName());
+//            File file = new File(mContext.getFilesDir(), downloadInfo.getFileName());
             InputStream is = null;
             FileOutputStream fileOutputStream = null;
             try {
@@ -183,7 +196,7 @@ public class DownloadManager {
     }
 
     /**
-     * 获取下载info
+     * 获取下载info，保存文件修改日期，etag等，用于下次断点继续下载时作比较
      *
      * @param downloadUrl
      * @return
