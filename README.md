@@ -16,7 +16,7 @@ android {
 
 dependencies {
     ....
-    implementation 'com.unicom.plugin:OkHttpPlugin:1.0.0'
+    implementation 'com.coco.plugin:OkHttpPlugin:1.0.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.0.1'
 }
 ```
