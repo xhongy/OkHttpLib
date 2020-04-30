@@ -1,4 +1,4 @@
-package com.unicom.okhttplib;
+package com.coco.okhttplib;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;

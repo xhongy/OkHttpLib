@@ -1,4 +1,4 @@
-package com.unicom.okhttplib;//package com.coco.okhttp;
+package com.coco.okhttplib;//package com.coco.okhttp;
 //
 //import android.content.Context;
 //import android.net.ConnectivityManager;

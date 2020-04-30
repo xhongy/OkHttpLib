@@ -1,4 +1,4 @@
-package com.unicom.okhttplib.FileDownload;
+package com.coco.okhttplib.FileDownload;
 
 /**
  * 下载信息
